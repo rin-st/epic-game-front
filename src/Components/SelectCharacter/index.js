@@ -1,66 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import './SelectCharacter.css';
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, transformCharacterData } from '../../constants';
 import LoadingIndicator from '../LoadingIndicator';
-import myEpicGame from '../../utils/MyEpicGame.json';
+import { transformCharacterData } from '../../utils/transformCharacterData';
 
-const SelectCharacter = ({ setCharacterNFT }) => {
-	const [characters, setCharacters] = useState([]);
-	const [gameContract, setGameContract] = useState(null);
+const SelectCharacter = ({ setCharacterNFT, gameContract }) => {
+	const [defaultCharacters, setDefaultCharacters] = useState([]);
 	const [mintingCharacter, setMintingCharacter] = useState(false);
 
-	// UseEffect
 	useEffect(() => {
-		const { ethereum } = window;
-
-		if (ethereum) {
-			const provider = new ethers.providers.Web3Provider(ethereum);
-			const signer = provider.getSigner();
-			const gameContract = new ethers.Contract(
-				CONTRACT_ADDRESS,
-				myEpicGame.abi,
-				signer
-			);
-
-			setGameContract(gameContract);
-		} else {
-			console.log('Ethereum object not found');
-		}
-	}, []);
-
-	useEffect(() => {
-		const getCharacters = async () => {
+		const getDefaultCharacters = async () => {
 			try {
-				console.log('Getting contract characters to mint');
+				console.log('Getting contract defaultCharacters to mint');
 
-				const charactersTxn = await gameContract.getAllDefaultCharacters();
-				console.log('charactersTxn:', charactersTxn);
+				const defaultCharactersTxn = await gameContract.getAllDefaultChars();
+				console.log('defaultCharactersTxn:', defaultCharactersTxn);
 
-				const characters = charactersTxn.map((characterData) =>
+				const defaultCharacters = defaultCharactersTxn.map((characterData) =>
 					transformCharacterData(characterData)
 				);
 
-				setCharacters(characters);
+				setDefaultCharacters(defaultCharacters);
 			} catch (error) {
-				console.error('Something went wrong fetching characters:', error);
+				console.error(
+					'Something went wrong fetching defaultCharacters:',
+					error
+				);
 			}
 		};
 
-		const onCharacterMint = async (sender, tokenId, characterIndex) => {
+		const onCharacterMint = async (sender, tokenId, defaultCharacterIndex) => {
 			console.log(
-				`CharacterNFTMinted - sender: ${sender} tokenId: ${tokenId.toNumber()} characterIndex: ${characterIndex.toNumber()}`
+				`CharacterNFTMinted - sender: ${sender} tokenId: ${tokenId.toNumber()} characterIndex: ${defaultCharacterIndex.toNumber()}`
 			);
 
 			if (gameContract) {
-				const characterNFT = await gameContract.checkIfUserHasNFT();
-				console.log('CharacterNFT: ', characterNFT);
-				setCharacterNFT(transformCharacterData(characterNFT));
+				const characterNFT = await gameContract.getCharacterNFT();
+				if (characterNFT.name) {
+					setCharacterNFT(transformCharacterData(characterNFT));
+				}
 			}
 		};
 
 		if (gameContract) {
-			getCharacters();
+			getDefaultCharacters();
 
 			gameContract.on('CharacterNFTMinted', onCharacterMint);
 		}
@@ -70,7 +52,7 @@ const SelectCharacter = ({ setCharacterNFT }) => {
 				gameContract.off('CharacterNFTMinted', onCharacterMint);
 			}
 		};
-	}, [gameContract]);
+	}, [gameContract, setCharacterNFT]);
 
 	const mintCharacterNFTAction = (characterId) => async () => {
 		try {
@@ -80,21 +62,31 @@ const SelectCharacter = ({ setCharacterNFT }) => {
 				const mintTxn = await gameContract.mintCharacterNFT(characterId);
 				await mintTxn.wait();
 				console.log('mintTxn:', mintTxn);
-				setMintingCharacter(false);
 			}
 		} catch (error) {
 			console.warn('MintCharacterAction Error:', error);
+		} finally {
 			setMintingCharacter(false);
 		}
 	};
 
-	const renderCharacters = () =>
-		characters.map((character, index) => (
+	const renderDefaultCharacters = () =>
+		defaultCharacters.map((character, index) => (
 			<div className="character-item" key={character.name}>
 				<div className="name-container">
 					<p>{character.name}</p>
 				</div>
-				<img src={character.imageURI} alt={character.name} />
+				<div className="img-container">
+					<img src={character.imageURI} alt={character.name} />
+				</div>
+
+				<div className="stats" key="stats">
+					<h4>{`💜 Health: ${character.hp}`}</h4>
+					<h4>{`⚔️ Attack Damage: ${character.attackDamage}`}</h4>
+					<h4>{`⚡ Critical Chance: ${character.criticalChance}`}</h4>
+					<h4>{`🍕 Heal Amount: ${character.healAmount}`}</h4>
+				</div>
+				{/* <Character characterNFT={character} attackState="" isFighting={false} /> */}
 				<button
 					type="button"
 					className="character-mint-button"
@@ -106,8 +98,8 @@ const SelectCharacter = ({ setCharacterNFT }) => {
 	return (
 		<div className="select-character-container">
 			<h2>Mint Your Hero. Choose wisely.</h2>
-			{characters.length > 0 && (
-				<div className="character-grid">{renderCharacters()}</div>
+			{defaultCharacters.length > 0 && (
+				<div className="character-grid">{renderDefaultCharacters()}</div>
 			)}
 			{mintingCharacter && (
 				<div className="loading">
@@ -116,7 +108,7 @@ const SelectCharacter = ({ setCharacterNFT }) => {
 						<p>Minting In Progress...</p>
 					</div>
 					<img
-						src="https://media2.giphy.com/media/61tYloUgq1eOk/giphy.gif?cid=ecf05e47dg95zbpabxhmhaksvoy8h526f96k4em0ndvx078s&rid=giphy.gif&ct=g"
+						src="https://cloudflare-ipfs.com/ipfs/QmXjFC6im8Biqu2gQ9W4RMPnwWCCgUmsqVqLTnNnoTCyM3"
 						alt="Minting loading indicator"
 					/>
 				</div>
