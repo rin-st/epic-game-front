@@ -32,6 +32,7 @@ const Character = ({ characterNFT, attackState, isFighting }) => {
 				<div className="stats" key="stats">
 					<h4>{`⚔️ Attack Damage: ${characterNFT.attackDamage}`}</h4>
 					<h4>{`⚡ Critical Chance: ${characterNFT.criticalChance}`}</h4>
+					<h4>{`💜 Pizza heals ${characterNFT.healAmount} HP`}</h4>
 				</div>
 			</div>
 		</div>

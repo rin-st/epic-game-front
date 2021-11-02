@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { transformCharacterData } from '../../utils/transformCharacterData';
-import LoadingIndicator from '../LoadingIndicator';
 import './Arena.css';
-import Character from '../Character';
+import Character from './components/Character';
+import LoadInfo from './components/LoadInfo';
+import Toast from './components/Toast';
 
 const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 	const [boss, setBoss] = useState(null);
@@ -16,7 +17,7 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 				setAttackState('attacking');
 				console.log('Attacking boss...');
 				const attackTxn = await gameContract.attackBoss({
-					gasLimit: 300000,
+					gasLimit: 900000,
 				});
 				await attackTxn.wait();
 				console.log('attackTxn:', attackTxn);
@@ -33,7 +34,7 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 				setAttackState('eating');
 				console.log('Eating pizza...');
 				const attackTxn = await gameContract.heal({
-					gasLimit: 300000,
+					gasLimit: 900000,
 				});
 				await attackTxn.wait();
 				console.log('attackTxn:', attackTxn);
@@ -49,7 +50,7 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 		const asyncGetChars = async () => {
 			try {
 				const characters = await gameContract.getAllCharacters({
-					gasLimit: 300000,
+					gasLimit: 900000,
 				});
 				setActiveCharacters(
 					characters
@@ -66,7 +67,7 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 	useEffect(() => {
 		const fetchBoss = async () => {
 			const bossTxn = await gameContract.getBigBoss({
-				gasLimit: 300000,
+				gasLimit: 900000,
 			});
 			setBoss(transformCharacterData(bossTxn));
 		};
@@ -80,7 +81,7 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 	useEffect(() => {
 		const fetchBoss = async () => {
 			const bossTxn = await gameContract.getBigBoss({
-				gasLimit: 300000,
+				gasLimit: 900000,
 			});
 			setBoss(transformCharacterData(bossTxn));
 		};
@@ -151,21 +152,11 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 
 	return (
 		<div className="arena-container">
-			{boss && (
-				<div id="toast" className={toast ? 'show' : ''}>
-					<div id="desc">{`💥 ${toast === 'critical' ? 'Critical! ' : ''}${
-						boss.name
-					} was hit for ${
-						characterNFT.attackDamage * (toast === 'critical' ? 2 : 1)
-					}!`}</div>
-				</div>
-			)}
-
+			<Toast boss={boss} toast={toast} characterNFT={characterNFT} />
 			<div className="vs-arena">
 				{/* Character NFT */}
 				{characterNFT && (
 					<div className="players-container">
-						{/* <h2>Your Character</h2> */}
 						<Character
 							characterNFT={characterNFT}
 							attackState={attackState}
@@ -179,22 +170,10 @@ const Arena = ({ characterNFT, setCharacterNFT, gameContract }) => {
 							>
 								{`🍕 Eat pizza!`}
 							</button>
-							<h4>{`⚔️ Heals ${characterNFT.healAmount} HP`}</h4>
 						</div>
 					</div>
 				)}
-				{attackState === 'attacking' && (
-					<div className="loading-indicator">
-						<LoadingIndicator />
-						<p>Attacking ⚔️</p>
-					</div>
-				)}
-				{attackState === 'eating' && (
-					<div className="loading-indicator">
-						<LoadingIndicator />
-						<p>🍕 Eating pizza</p>
-					</div>
-				)}
+				<LoadInfo attackState={attackState} />
 				{/* Boss */}
 				{boss && (
 					<div className="boss-container">

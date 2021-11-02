@@ -79,14 +79,12 @@ const SelectCharacter = ({ setCharacterNFT, gameContract }) => {
 				<div className="img-container">
 					<img src={character.imageURI} alt={character.name} />
 				</div>
-
 				<div className="stats" key="stats">
 					<h4>{`💜 Health: ${character.hp}`}</h4>
 					<h4>{`⚔️ Attack Damage: ${character.attackDamage}`}</h4>
 					<h4>{`⚡ Critical Chance: ${character.criticalChance}`}</h4>
 					<h4>{`🍕 Heal Amount: ${character.healAmount}`}</h4>
 				</div>
-				{/* <Character characterNFT={character} attackState="" isFighting={false} /> */}
 				<button
 					type="button"
 					className="character-mint-button"

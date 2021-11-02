@@ -14,14 +14,20 @@
 }
 
 .header-container {
-	padding-top: 30px;
+	padding: 10px;
 }
 
 .header {
 	margin-bottom: 20px;
-	font-size: 50px;
+	font-size: 40px;
 	font-weight: bold;
 	color: black;
+}
+
+@media (max-width: 899px) {
+	.header {
+		font-size: 30px;
+	}
 }
 
 .sub-text {

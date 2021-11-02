@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
-import SelectCharacter from './Components/SelectCharacter';
-import Arena from './Components/Arena';
-import LoadingIndicator from './Components/LoadingIndicator';
-import twitterLogo from './assets/twitter-logo.svg';
-import myEpicGame from './utils/contracts/MyEpicGame.json';
 import { ethers } from 'ethers';
+
+import Content from './components/Content';
+import twitterLogo from '../../assets/twitter-logo.svg';
+import myEpicGame from '../../utils/contracts/MyEpicGame.json';
+import { transformCharacterData } from '../../utils/transformCharacterData';
 import { CONTRACT_ADDRESS, TWITTER_HANDLE, TWITTER_LINK } from './constants';
-import { transformCharacterData } from './utils/transformCharacterData';
+
+import './App.css';
 
 const App = () => {
 	const [currentAccount, setCurrentAccount] = useState(null);
-	const [characterNFT, setCharacterNFT] = useState(null);
+	const [characterNFT, setCharacterNFT] = useState(undefined);
 	const [isLoading, setIsLoading] = useState(false);
 	const [gameContract, setGameContract] = useState(null);
 
@@ -37,6 +37,7 @@ const App = () => {
 
 	const checkIfWalletIsConnected = async () => {
 		try {
+			setIsLoading(true);
 			const { ethereum } = window;
 
 			if (!ethereum) {
@@ -55,46 +56,27 @@ const App = () => {
 			} else {
 				console.log('No authorized account found');
 			}
-			setIsLoading(false);
 		} catch (error) {
 			console.log(error);
+		} finally {
 			setIsLoading(false);
-		}
-	};
-
-	const connectWalletAction = async () => {
-		try {
-			const { ethereum } = window;
-
-			if (!ethereum) {
-				alert('Get MetaMask!');
-				return;
-			}
-
-			const accounts = await ethereum.request({
-				method: 'eth_requestAccounts',
-			});
-
-			console.log('Connected', accounts[0]);
-			setCurrentAccount(accounts[0]);
-		} catch (error) {
-			console.log(error);
 		}
 	};
 
 	useEffect(() => {
-		setIsLoading(true);
 		checkIfWalletIsConnected();
 	}, []);
 
 	useEffect(() => {
 		const fetchNFT = async () => {
+			setIsLoading(true);
 			const characterNFT = await gameContract.getCharacterNFT();
 			if (characterNFT.name) {
 				console.log('User has character NFT');
 				setCharacterNFT(transformCharacterData(characterNFT));
 			} else {
 				console.log('No character NFT found!');
+				setCharacterNFT(null);
 			}
 
 			setIsLoading(false);
@@ -106,47 +88,6 @@ const App = () => {
 		}
 	}, [gameContract]);
 
-	const renderContent = () => {
-		if (isLoading) {
-			return <LoadingIndicator />;
-		}
-
-		if (!currentAccount) {
-			return (
-				<div className="connect-wallet-container">
-					<img
-						src="https://cloudflare-ipfs.com/ipfs/QmRgdKqhMPGBp4jbExCCXT89zGmvPAr5xtdd5vR8MyXkHx"
-						alt="tmnt"
-					/>
-					<button
-						className="cta-button connect-wallet-button"
-						onClick={connectWalletAction}
-					>
-						Connect Wallet To Get Started
-					</button>
-				</div>
-			);
-		} else if (currentAccount && !characterNFT) {
-			return (
-				<SelectCharacter
-					setCharacterNFT={setCharacterNFT}
-					gameContract={gameContract}
-				/>
-			);
-			/*
-			 * If there is a connected wallet and characterNFT, it's time to battle!
-			 */
-		} else if (currentAccount && characterNFT) {
-			return (
-				<Arena
-					characterNFT={characterNFT}
-					setCharacterNFT={setCharacterNFT}
-					gameContract={gameContract}
-				/>
-			);
-		}
-	};
-
 	return (
 		<div className="App">
 			<div className="container">
@@ -154,7 +95,14 @@ const App = () => {
 					<p className="header gradient-text">
 						⚔️ Teenage Mutant Ninja Turtles ⚔️
 					</p>
-					{renderContent()}
+					<Content
+						isLoading={isLoading}
+						currentAccount={currentAccount}
+						setCurrentAccount={setCurrentAccount}
+						gameContract={gameContract}
+						characterNFT={characterNFT}
+						setCharacterNFT={setCharacterNFT}
+					/>
 				</div>
 				<div className="footer-container">
 					<img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
